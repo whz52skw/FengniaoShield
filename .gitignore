@@ -1,0 +1,23 @@
+# Gradle
+.gradle/
+build/
+app/build/
+*/build/
+
+# 本机配置（不入库）
+local.properties
+
+# IDE
+.idea/
+*.iml
+.DS_Store
+
+# 产物
+*.apk
+*.aab
+
+# 日志/临时
+*.log
+captures/
+.externalNativeBuild/
+.cxx/

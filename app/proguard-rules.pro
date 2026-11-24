@@ -1,0 +1,2 @@
+-keep class com.highcapable.yukihookapi.** { *; }
+-keep class com.fnhook2.** { *; }
