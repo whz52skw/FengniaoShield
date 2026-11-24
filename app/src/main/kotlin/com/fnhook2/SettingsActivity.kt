@@ -15,7 +15,7 @@ class SettingsActivity : Activity() {
         CrashLogger.installCrashHandler()
 
         val root = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(28), dp(44), dp(28), dp(28)) }
-        root.addView(tv("蜂鸟骑士增强 最终版", 24f, Color.BLACK, true))
+        root.addView(tv("蜂鸟盾", 24f, Color.BLACK, true))
         root.addView(tv("", 12f, Color.BLACK, false))
         root.addView(tv("· 超速 / 路口超速 / 闯红灯 / 分心驾驶 / 头盔 屏蔽", 16f, Color.DKGRAY, false))
         root.addView(tv("· GPS 可信（假定位不被识破，兼容 LocationMax）", 16f, Color.DKGRAY, false))

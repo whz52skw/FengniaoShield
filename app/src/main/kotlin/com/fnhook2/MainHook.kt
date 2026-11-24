@@ -6,7 +6,7 @@ import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XposedHelpers
 import de.robv.android.xposed.callbacks.XC_LoadPackage
 
-/** 蜂鸟骑士增强 最终版（五层+无视距离，无平移） */
+/** 蜂鸟盾 最终版（五层+无视距离，无平移） */
 class MainHook : IXposedHookLoadPackage {
     override fun handleLoadPackage(lpparam: XC_LoadPackage.LoadPackageParam) {
         if (lpparam.packageName != "me.ele.hbdteam") return
