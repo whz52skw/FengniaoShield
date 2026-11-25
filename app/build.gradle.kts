@@ -5,13 +5,15 @@ plugins {
 
 android {
     namespace = "com.fnhook2"
+    buildFeatures { buildConfig = true }
     compileSdk = 34
     defaultConfig {
         applicationId = "com.fnhook2"
         minSdk = 26
         targetSdk = 34
         versionCode = 2
-        versionName = "2.0.0"
+        versionName = "2.1.0"
+        buildConfigField("Boolean", "NATION_MODE", (project.findProperty("fncMode") == "nation").toString())
     }
     buildTypes {
         release {

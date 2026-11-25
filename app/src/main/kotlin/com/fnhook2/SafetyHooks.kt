@@ -11,6 +11,7 @@ import de.robv.android.xposed.XposedBridge
 object SafetyHooks {
 
     fun install() {
+        val nationLite = try { com.fnhook2.BuildConfig.NATION_MODE } catch (t: Throwable) { false }
         val cl = PrefsHolder.classLoader
 
         // ============ 1) 超速 ============
@@ -28,10 +29,10 @@ object SafetyHooks {
 
         // ============ 2) 闯红灯（10.11.1 全链） ============
         // ★ 判定管理器（TrafficLightManagerV2）——之前的最大漏洞
-        hookAll(cl, "mj0.a", "闯红灯管理器", { true })
+        if (!nationLite) hookAll(cl, "mj0.a", "闯红灯管理器", { true })
         // 判定核心
-        hookAll(cl, "jj0.c", "闯红灯判定核心", { true })
-        hookAll(cl, "jj0.d", "闯红灯状态机", { true })
+        if (!nationLite) hookAll(cl, "jj0.c", "闯红灯判定核心", { true })
+        hookAll(cl, "jj0.d", "闯红灯上报点", { it == "o" })
         hookAll(cl, "jj0.d\u0024a", "闯红灯回调", { true })
         hookAll(cl, "jj0.d\u0024b", "闯红灯数据", { true })
         hookAll(cl, "jj0.q", "闯红灯上报", { true })
