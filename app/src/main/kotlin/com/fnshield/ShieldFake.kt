@@ -42,6 +42,14 @@ object ShieldFake {
         FnLogger.line("[Fake] 应用假坐标 " + lat + "," + lng)
     }
 
+    /** 假定位是否可用（开关开 + 坐标有效，避免 0,0 跑到海上） */
+    private fun fakeValid(): Boolean {
+        if (!PrefsHolder.getFakeEnabled()) return false
+        val la = PrefsHolder.getFakeLat(); val ln = PrefsHolder.getFakeLng()
+        if (Math.abs(la) < 0.0001 && Math.abs(ln) < 0.0001) return false
+        return Math.abs(la) <= 90.0 && Math.abs(ln) <= 180.0
+    }
+
     private fun makeLoc(): Location {
         val l = Location("gps")
         l.latitude = fakeLat; l.longitude = fakeLng
@@ -64,7 +72,7 @@ object ShieldFake {
                 if (m.name != "getLastKnownLocation") continue
                 XposedBridge.hookMethod(m, object : XC_MethodHook() {
                     override fun beforeHookedMethod(p: MethodHookParam?) {
-                        if (p == null || !PrefsHolder.getFakeEnabled()) return
+                        if (p == null || !fakeValid()) return
                         HitLog.hit("假定位-last"); p.result = makeLoc()
                     }
                 })
@@ -80,7 +88,7 @@ object ShieldFake {
                 if (m.name != "requestLocationUpdates") continue
                 XposedBridge.hookMethod(m, object : XC_MethodHook() {
                     override fun beforeHookedMethod(p: MethodHookParam?) {
-                        if (p == null || !PrefsHolder.getFakeEnabled()) return
+                        if (p == null || !fakeValid()) return
                         for (a in p.args) if (a is LocationListener) {
                             if (!listeners.contains(a)) listeners.add(a)
                             HitLog.hit("假定位-updates")
@@ -102,7 +110,7 @@ object ShieldFake {
                 val isLng = m.name == "getLongitude"
                 XposedBridge.hookMethod(m, object : XC_MethodHook() {
                     override fun beforeHookedMethod(p: MethodHookParam?) {
-                        if (p == null || !PrefsHolder.getFakeEnabled()) return
+                        if (p == null || !fakeValid()) return
                         HitLog.hit("假定位-amap")
                         when {
                             isLat -> p.result = fakeLat

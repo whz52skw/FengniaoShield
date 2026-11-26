@@ -27,7 +27,15 @@ object PrefsHolder {
 
     fun init(ctx: Context) {
         sp = ctx.getSharedPreferences("fnshield_prefs", Context.MODE_PRIVATE)
-        try { xsp = XSharedPreferences("com.fnshield", "fnshield_prefs") } catch (_: Throwable) { xsp = null }
+        val nation = try { BuildConfig.NATION_MODE } catch (_: Throwable) { false }
+        if (nation) {
+            // 整合版：模块被嵌入，没有独立 com.fnshield 的 sp，只用 app 自身 sp
+            xsp = null
+            FnLogger.line("[Prefs] 整合版：使用 app 自身 sp")
+        } else {
+            try { xsp = XSharedPreferences("com.fnshield", "fnshield_prefs") } catch (_: Throwable) { xsp = null }
+            FnLogger.line("[Prefs] LSP版：跨进程读 com.fnshield")
+        }
         reload()
     }
 
