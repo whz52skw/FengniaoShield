@@ -21,6 +21,8 @@ object PrefsHolder {
     @Volatile private var _fakeLng = 0.0
     @Volatile private var _routeSim = false
     @Volatile private var _amapKey = ""
+    @Volatile private var _simSpeed = 100
+    @Volatile private var _favorites = "[]"
 
     /** 遵守交规: 默认开启, 无开关 */
     val obeyTraffic: Boolean get() = true
@@ -52,6 +54,8 @@ object PrefsHolder {
             _fakeLng = src.getString("fake_lng", "0")?.toDouble() ?: 0.0
             _routeSim = src.getBoolean("route_sim_enabled", false)
             _amapKey = src.getString("amap_key", "") ?: ""
+            _simSpeed = src.getInt("sim_speed", 100)
+            _favorites = src.getString("favorites", "[]") ?: "[]"
         } catch (_: Throwable) {}
         lastReload = System.currentTimeMillis()
     }
@@ -64,6 +68,8 @@ object PrefsHolder {
     fun getFakeLng(): Double { ensureFresh(); return _fakeLng }
     fun getRouteSim(): Boolean { ensureFresh(); return _routeSim }
     fun getAmapKey(): String { ensureFresh(); return _amapKey }
+    val simSpeed: Int get() { ensureFresh(); return _simSpeed }
+    fun getFavorites(): String { ensureFresh(); return _favorites }
 
     // ===== 写入（模块 UI / 浮球进程） =====
     fun setIgnore(v: Boolean) { ignoreDistanceEnabled = v; sp?.edit()?.putBoolean("ignoreDistanceEnabled", v)?.apply() }
@@ -72,6 +78,8 @@ object PrefsHolder {
     fun setFakeLng(v: Double) { _fakeLng = v; sp?.edit()?.putString("fake_lng", v.toString())?.apply() }
     fun setRouteSim(v: Boolean) { _routeSim = v; sp?.edit()?.putBoolean("route_sim_enabled", v)?.apply() }
     fun setAmapKey(v: String) { _amapKey = v; sp?.edit()?.putString("amap_key", v)?.apply() }
+    fun setSimSpeed(v: Int) { _simSpeed = v; sp?.edit()?.putInt("sim_speed", v)?.apply() }
+    fun setFavorites(json: String) { _favorites = json; sp?.edit()?.putString("favorites", json)?.apply() }
 
     // ===== 心跳 =====
     fun markAlive(ctx: Context, ts: Long) { sp?.edit()?.putLong("lsp_alive_ts", ts)?.apply() }

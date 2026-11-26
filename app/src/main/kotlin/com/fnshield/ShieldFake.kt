@@ -18,6 +18,7 @@ object ShieldFake {
     @Volatile private var fakeLat = 0.0
     @Volatile private var fakeLng = 0.0
     @Volatile private var fakeSpeed = 6.5f
+    @Volatile private var simSpeed = 100
     private val listeners = CopyOnWriteArrayList<LocationListener>()
     private var simTimer: Timer? = null
     private var step = 0
@@ -33,6 +34,8 @@ object ShieldFake {
     fun reload() {
         fakeLat = PrefsHolder.getFakeLat()
         fakeLng = PrefsHolder.getFakeLng()
+        simSpeed = PrefsHolder.simSpeed
+        fakeSpeed = simSpeed.toFloat()
     }
 
     fun applyFake(lat: Double, lng: Double) {
@@ -124,6 +127,13 @@ object ShieldFake {
         } catch (t: Throwable) { FnLogger.line("✘ 假定位 amap: " + t.message) }
     }
 
+    fun setSimSpeed(kmh: Int) {
+        simSpeed = kmh
+        fakeSpeed = kmh.toFloat()
+        PrefsHolder.setSimSpeed(kmh)
+        FnLogger.line("[Fake] 模拟速度 = " + kmh + " km/h")
+    }
+
     fun setRouteSim(on: Boolean) {
         if (on) startSim() else stopSim()
     }
@@ -136,7 +146,8 @@ object ShieldFake {
             override fun run() {
                 try {
                     step++
-                    fakeLat += 0.00009
+                    val meters = simSpeed / 3.6 * 3.0
+                    fakeLat += meters / 111000.0
                     PrefsHolder.setFakeLat(fakeLat)
                     pushFake()
                     if (step % 10 == 0) FnLogger.line("[Fake] 路线推进 step=" + step)
