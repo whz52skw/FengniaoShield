@@ -23,6 +23,11 @@ import de.robv.android.xposed.XposedHelpers
  */
 object ShieldFloat {
     private const val TAG = "FnShieldBall"
+    // 隐藏状态：只在内存，app 重启即恢复显示
+    @Volatile private var hidden = false
+    private val balls = java.util.Collections.synchronizedSet(java.util.HashSet<View>())
+    @Volatile private var lastKeyCode = -1
+    @Volatile private var lastKeyTime = 0L
 
     fun install(cl: ClassLoader) {
         try {
@@ -37,6 +42,43 @@ object ShieldFloat {
             })
             FnLogger.line("[Float] 内嵌悬浮球 hook 已挂")
         } catch (t: Throwable) { FnLogger.line("[Float] 挂载失败: " + t.message) }
+
+        // 音量键双击：隐藏/显示悬浮球（防误触：同键 + 200~600ms 间隔）
+        try {
+            XposedHelpers.findAndHookMethod("android.app.Activity", cl, "dispatchKeyEvent", android.view.KeyEvent::class.java, object : XC_MethodHook() {
+                override fun beforeHookedMethod(p: MethodHookParam?) {
+                    val e = p?.args?.get(0) as? android.view.KeyEvent ?: return
+                    if (e.action != android.view.KeyEvent.ACTION_DOWN) return
+                    val code = e.keyCode
+                    if (code != android.view.KeyEvent.KEYCODE_VOLUME_UP && code != android.view.KeyEvent.KEYCODE_VOLUME_DOWN) return
+                    val now = android.os.SystemClock.uptimeMillis()
+                    val gap = now - lastKeyTime
+                    if (code == lastKeyCode && gap in 200..600) {
+                        // 双击成功：切换显隐，并吞掉这次按键（避免再调音量）
+                        toggle()
+                        p.result = true
+                        lastKeyCode = -1
+                        lastKeyTime = 0L
+                        FnLogger.line("[Float] 音量双击 → " + (if (hidden) "隐藏" else "显示"))
+                    } else {
+                        lastKeyCode = code
+                        lastKeyTime = now
+                    }
+                }
+            })
+            FnLogger.line("[Float] 音量双击隐藏已挂（200-600ms 同键）")
+        } catch (t: Throwable) { FnLogger.line("[Float] 音量键挂载失败: " + t.message) }
+    }
+
+    /** 切换显隐（所有已挂的球） */
+    private fun toggle() {
+        hidden = !hidden
+        val snapshot = balls.toList()
+        for (v in snapshot) {
+            try {
+                v.post { v.visibility = if (hidden) View.GONE else View.VISIBLE }
+            } catch (_: Throwable) {}
+        }
     }
 
     private fun dp(c: Context, v: Int): Int = (v * c.resources.displayMetrics.density).toInt()
@@ -61,6 +103,8 @@ object ShieldFloat {
             leftMargin = dp(act, 8)
             topMargin = dp(act, 130)
         }
+        ball.visibility = if (hidden) View.GONE else View.VISIBLE
+        balls.add(ball)
         decor.addView(ball, lp)
         FnLogger.line("[Float] 球已加到 " + act.javaClass.simpleName)
     }

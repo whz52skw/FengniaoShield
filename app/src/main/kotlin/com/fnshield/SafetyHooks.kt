@@ -33,8 +33,8 @@ object SafetyHooks {
         //   jj0.c: 12个static void 全是地图渲染(多边形图层/热力图/动态marker/导航位置)
         //   jj0.e/s 事件回调、jj0.j/i 地图卡片(Lmagex) —— 全类拦截=干死小蓝点+地名
         hookAll(cl, "jj0.d", "闯红灯判定上报", { it == "o" || it == "h" || it == "j" || it == "p" || it == "q" || it == "r" })
-        hookAll(cl, "jj0.q", "闯红灯上报", { it == "a" || it == "d" })
-        hookAll(cl, "jj0.u", "闯红灯工具判定", { it == "c" || it == "d" || it == "e" || it == "f" })
+        hookAll(cl, "jj0.q", "闯红灯上报", { it == "a" || it == "d" || it == "e" || it == "f" || it == "g" || it == "h" })
+        hookAll(cl, "jj0.u", "闯红灯工具判定", { it == "c" || it == "d" || it == "e" || it == "f" || it == "g" || it == "h" || it == "i" || it == "j" || it == "k" || it == "l" })
         // 判定模型
         hookAll(cl, "me.ele.hb.trafficsafety.model.MoveStateChangeResult", "闯红灯判定结果", { true })
         hookAll(cl, "me.ele.hb.trafficsafety.model.SceneConfig4MNN", "闯红灯MNN", { true })

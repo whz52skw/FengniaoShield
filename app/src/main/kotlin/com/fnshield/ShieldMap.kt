@@ -221,12 +221,16 @@ object ShieldMap {
                             if (poi == null) continue
                             try {
                                 val title = poi.javaClass.getMethod("getTitle").invoke(poi) as String
+                                val addr = poiAddr(poi)
+                                var dist = 0f
+                                try { dist = poi.javaClass.getMethod("getDistance").invoke(poi) as Float } catch (_: Throwable) {}
                                 val llp = poi.javaClass.getMethod("getLatLonPoint").invoke(poi)
                                 val la = llp.javaClass.getMethod("getLatitude").invoke(llp) as Double
                                 val ln = llp.javaClass.getMethod("getLongitude").invoke(llp) as Double
-                                list.add(arrayOf(title, la, ln))
+                                list.add(arrayOf(title, addr, dist, la, ln))
                             } catch (_: Throwable) {}
                         }
+                        list.sortBy { (it[2] as Float) }
                         Handler(Looper.getMainLooper()).post { showSearchResult(act, keyword, list) }
                     } catch (t: Throwable) { FnLogger.line("[Map] 解析搜索结果失败: " + t.message) }
                 }
@@ -242,14 +246,34 @@ object ShieldMap {
         }
     }
 
+    /** 取 POI 的「省市区镇」地址 */
+    private fun poiAddr(poi: Any): String {
+        val sb = StringBuilder()
+        for (m in listOf("getProvinceName", "getCityName", "getAdcodeName", "getTownship")) {
+            try {
+                val s = poi.javaClass.getMethod(m).invoke(poi) as? String
+                if (!s.isNullOrEmpty() && !sb.contains(s)) sb.append(s)
+            } catch (_: Throwable) {}
+        }
+        if (sb.isEmpty()) {
+            try { (poi.javaClass.getMethod("getSnippet").invoke(poi) as? String)?.let { if (it.isNotEmpty()) sb.append(it) } } catch (_: Throwable) {}
+        }
+        return sb.toString()
+    }
+
     private fun showSearchResult(act: Activity, keyword: String, list: List<Array<Any>>) {
         try {
             if (list.isEmpty()) { toast(act, "没搜到「" + keyword + "」"); return }
             val box = LinearLayout(act).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(act,12), dp(act,8), dp(act,12), dp(act,8)) }
             for (item in list) {
-                val title = item[0] as String; val la = item[1] as Double; val ln = item[2] as Double
+                val title = item[0] as String
+                val addr = item[1] as String
+                val dist = item[2] as Float
+                val la = item[3] as Double
+                val ln = item[4] as Double
+                val tail = if (dist > 0f) "  [" + String.format("%.1fkm", dist / 1000.0) + "]" else ""
                 box.addView(TextView(act).apply {
-                    text = title + "\n" + String.format("%.6f,%.6f", la, ln)
+                    text = title + (if (addr.isNotEmpty()) "\n" + addr else "") + tail
                     textSize = 14f; setTextColor(Color.BLACK); setPadding(0, dp(act,8), 0, dp(act,8))
                     setOnClickListener { doOpenAt(act, la, ln) }
                 })
@@ -261,12 +285,50 @@ object ShieldMap {
 
     // ============ 开启 / 指定点 ============
     private fun doOpen(act: Activity) {
-        val lat = PrefsHolder.getFakeLat(); val lng = PrefsHolder.getFakeLng()
-        if (lat == 0.0 && lng == 0.0) { toast(act, "请先在地图上选点"); return }
+        var lat = PrefsHolder.getFakeLat(); var lng = PrefsHolder.getFakeLng()
+        if (lat == 0.0 && lng == 0.0) {
+            val c = mapCenter(act)
+            if (c != null) { lat = c.first; lng = c.second; FnLogger.line("[Map] 用地图中心 " + lat + "," + lng) }
+            else { toast(act, "请先在地图上点一下选点"); return }
+        }
+        PrefsHolder.setFakeLat(lat); PrefsHolder.setFakeLng(lng)
         PrefsHolder.setFakeEnabled(true)
         ShieldFake.applyFake(lat, lng)
         toast(act, "已开启虚拟定位")
         FnLogger.line("[Map] 开启虚拟定位 " + lat + "," + lng)
+    }
+
+    /** 反射拿当前地图中心点（AMap.getCameraPosition().target.latitude/longitude） */
+    private fun mapCenter(act: Activity): Pair<Double, Double>? {
+        try {
+            var cls: Class<*>? = act.javaClass
+            var depth = 0
+            while (cls != null && depth < 6) {
+                for (f in cls.declaredFields) {
+                    try {
+                        f.isAccessible = true
+                        val v = f.get(act) ?: continue
+                        val n = v.javaClass.name
+                        if (n == "com.amap.api.maps.AMap") {
+                            val cam = v.javaClass.getMethod("getCameraPosition").invoke(v)
+                            val target = cam.javaClass.getMethod("target").invoke(cam) ?: continue
+                            val la = target.javaClass.getMethod("latitude").invoke(target) as Double
+                            val ln = target.javaClass.getMethod("longitude").invoke(target) as Double
+                            if (Math.abs(la) > 0.0001 || Math.abs(ln) > 0.0001) return la to ln
+                        }
+                    } catch (_: Throwable) {}
+                }
+                cls = cls.superclass; depth++
+            }
+        } catch (_: Throwable) {}
+        // 兜底：用最后已知真实位置
+        try {
+            val lm = act.getSystemService(Context.LOCATION_SERVICE) as? android.location.LocationManager
+            val l = lm?.getLastKnownLocation(android.location.LocationManager.GPS_PROVIDER)
+                ?: lm?.getLastKnownLocation(android.location.LocationManager.NETWORK_PROVIDER)
+            if (l != null) return l.latitude to l.longitude
+        } catch (_: Throwable) {}
+        return null
     }
 
     private fun doOpenAt(act: Activity, lat: Double, lng: Double) {
