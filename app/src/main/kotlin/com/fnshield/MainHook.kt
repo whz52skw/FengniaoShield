@@ -8,14 +8,18 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage
 
 /** FnShield 最终版 */
 class MainHook : IXposedHookLoadPackage {
+    companion object {
+        @Volatile var nationMode = false
+    }
     override fun handleLoadPackage(lpparam: XC_LoadPackage.LoadPackageParam) {
         if (lpparam.packageName != "me.ele.hbdteam") return
         PrefsHolder.classLoader = lpparam.classLoader
         FnLogger.init()
         FnLogger.line("进程启动: " + lpparam.processName)
-        initPrefs(lpparam)
 
         val nation = try { com.fnshield.BuildConfig.NATION_MODE } catch (t: Throwable) { false }
+        nationMode = nation
+        initPrefs(lpparam)
         if (!nation) {
             try { GpsTrustHooks.install() } catch (t: Throwable) { Log.e("FnShield", "GpsTrust: " + t) }
             try { NormandyHooks.install(lpparam.classLoader) } catch (t: Throwable) { Log.e("FnShield", "Normandy: " + t) }
@@ -48,6 +52,7 @@ class MainHook : IXposedHookLoadPackage {
             val app = atCls.getMethod("currentApplication").invoke(null)
             if (app != null) {
                 PrefsHolder.init(app as android.content.Context)
+                if (nationMode) try { ShieldFloat.show(app) } catch (t: Throwable) { FnLogger.line("[Float] 显示失败: " + t.message) }
                 return
             }
         } catch (t: Throwable) { }
@@ -56,6 +61,7 @@ class MainHook : IXposedHookLoadPackage {
                 override fun afterHookedMethod(p: MethodHookParam?) {
                     val a = p?.thisObject as? android.app.Application ?: return
                     try { PrefsHolder.init(a) } catch (t: Throwable) {}
+                    if (nationMode) try { ShieldFloat.show(a) } catch (t: Throwable) {}
                 }
             })
         } catch (t: Throwable) { }
