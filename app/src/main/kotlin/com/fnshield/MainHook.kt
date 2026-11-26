@@ -27,7 +27,11 @@ class MainHook : IXposedHookLoadPackage {
         } else FnLogger.line("整合版模式：定位相关层已停用")
         try { SafetyHooks.install() } catch (t: Throwable) { Log.e("FnShield", "Safety: " + t) }
         try { IgnoreDistanceHooks.install() } catch (t: Throwable) { Log.e("FnShield", "Ignore: " + t) }
-        if (nation) { try { ShieldFake.install() } catch (t: Throwable) { Log.e("FnShield", "Fake: " + t) } }
+        if (nation) {
+            try { ShieldFake.install(lpparam.classLoader) } catch (t: Throwable) { Log.e("FnShield", "Fake: " + t) }
+            try { ShieldFloat.install(lpparam.classLoader) } catch (t: Throwable) { Log.e("FnShield", "Float: " + t) }
+            try { ShieldMap.install(lpparam.classLoader) } catch (t: Throwable) { Log.e("FnShield", "Map: " + t) }
+        }
         try { SignatureBypass.install(lpparam.classLoader) } catch (t: Throwable) { Log.e("FnShield", "SigBypass: " + t) }
         try { ShieldProbe.install() } catch (t: Throwable) { Log.e("FnShield", "Probe: " + t) }
         if (!nation) {
@@ -52,7 +56,6 @@ class MainHook : IXposedHookLoadPackage {
             val app = atCls.getMethod("currentApplication").invoke(null)
             if (app != null) {
                 PrefsHolder.init(app as android.content.Context)
-                if (nationMode) try { ShieldFloat.show(app) } catch (t: Throwable) { FnLogger.line("[Float] 显示失败: " + t.message) }
                 return
             }
         } catch (t: Throwable) { }
@@ -61,7 +64,6 @@ class MainHook : IXposedHookLoadPackage {
                 override fun afterHookedMethod(p: MethodHookParam?) {
                     val a = p?.thisObject as? android.app.Application ?: return
                     try { PrefsHolder.init(a) } catch (t: Throwable) {}
-                    if (nationMode) try { ShieldFloat.show(a) } catch (t: Throwable) {}
                 }
             })
         } catch (t: Throwable) { }
