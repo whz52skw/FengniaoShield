@@ -1,4 +1,4 @@
-package com.fnhook2
+package com.fnshield
 
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XposedHelpers

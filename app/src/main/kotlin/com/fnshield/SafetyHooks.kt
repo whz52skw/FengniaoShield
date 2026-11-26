@@ -1,4 +1,4 @@
-package com.fnhook2
+package com.fnshield
 
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XposedBridge
@@ -11,7 +11,7 @@ import de.robv.android.xposed.XposedBridge
 object SafetyHooks {
 
     fun install() {
-        val nationLite = try { com.fnhook2.BuildConfig.NATION_MODE } catch (t: Throwable) { false }
+        val nationLite = try { com.fnshield.BuildConfig.NATION_MODE } catch (t: Throwable) { false }
         val cl = PrefsHolder.classLoader
 
         // ============ 1) 超速 ============
@@ -27,20 +27,14 @@ object SafetyHooks {
         hookClassTrue(cl, "me.ele.hb.biz.voiceservice.model.OverSpeedPointModel", "isOverSpeed", "超速点判定")
         hookClassTrue(cl, "me.ele.hb.biz.voiceservice.model.OverSpeedUploadModel", "isBroadcast", "超速播报标记")
 
-        // ============ 2) 闯红灯（10.11.1 全链） ============
-        // ★ 判定管理器（TrafficLightManagerV2）——之前的最大漏洞
-        if (!nationLite) hookAll(cl, "mj0.a", "闯红灯管理器", { true })
-        // 判定核心
-        if (!nationLite) hookAll(cl, "jj0.c", "闯红灯判定核心", { true })
-        hookAll(cl, "jj0.d", "闯红灯上报点", { it == "o" })
-        hookAll(cl, "jj0.d\u0024a", "闯红灯回调", { true })
-        hookAll(cl, "jj0.d\u0024b", "闯红灯数据", { true })
-        hookAll(cl, "jj0.q", "闯红灯上报", { true })
-        hookAll(cl, "jj0.u", "闯红灯工具", { true })
-        hookAll(cl, "jj0.e", "闯红灯事件", { true })
-        hookAll(cl, "jj0.s", "闯红灯状态", { true })
-        hookAll(cl, "jj0.j", "闯红灯队列", { true })
-        hookAll(cl, "jj0.i", "闯红灯刷新", { true })
+        // ============ 2) 闯红灯（10.11.1 点杀版·修复蓝点bug） ============
+        // ★蓝点修复：mj0.a / jj0.c / jj0.e / jj0.s / jj0.j / jj0.i 移除全类拦截
+        //   mj0.a 红绿灯管理器: 15方法14个是地图/UI回调(CameraPosition/Marker/倒计时/绿灯通知)
+        //   jj0.c: 12个static void 全是地图渲染(多边形图层/热力图/动态marker/导航位置)
+        //   jj0.e/s 事件回调、jj0.j/i 地图卡片(Lmagex) —— 全类拦截=干死小蓝点+地名
+        hookAll(cl, "jj0.d", "闯红灯判定上报", { it == "o" || it == "h" || it == "j" || it == "p" || it == "q" || it == "r" })
+        hookAll(cl, "jj0.q", "闯红灯上报", { it == "a" || it == "d" })
+        hookAll(cl, "jj0.u", "闯红灯工具判定", { it == "c" || it == "d" || it == "e" || it == "f" })
         // 判定模型
         hookAll(cl, "me.ele.hb.trafficsafety.model.MoveStateChangeResult", "闯红灯判定结果", { true })
         hookAll(cl, "me.ele.hb.trafficsafety.model.SceneConfig4MNN", "闯红灯MNN", { true })

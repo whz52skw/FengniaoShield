@@ -1,4 +1,4 @@
-package com.fnhook2
+package com.fnshield
 
 /** 更新屏蔽（对标 location.patch 的 UpdateBlockerHooks） */
 object UpdateBlockerHooks {

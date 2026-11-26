@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace = "com.fnhook2"
+    namespace = "com.fnshield"
     buildFeatures { buildConfig = true }
     compileSdk = 34
     defaultConfig {
-        applicationId = "com.fnhook2"
+        applicationId = "com.fnshield"
         minSdk = 26
         targetSdk = 34
         versionCode = 2

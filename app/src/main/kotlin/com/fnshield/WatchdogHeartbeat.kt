@@ -1,4 +1,4 @@
-package com.fnhook2
+package com.fnshield
 
 /** 每分钟自检：心跳 + 各层命中快照 + 零命中层（可能无效）清单 */
 object WatchdogHeartbeat {
@@ -29,7 +29,7 @@ object WatchdogHeartbeat {
                 } catch (t: Throwable) { FnLogger.line("[自检] 异常: " + t.message) }
                 try { Thread.sleep(60000) } catch (_: InterruptedException) { break }
             }
-        }, "fn2-watchdog")
+        }, "fnshield-watchdog")
         t.isDaemon = true
         t.start()
         FnLogger.line("[自检] 看门狗已启动（每60秒一条）")

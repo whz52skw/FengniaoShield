@@ -10,5 +10,5 @@ dependencyResolutionManagement {
         maven { url = uri("https://api.xposed.info/") }
     }
 }
-rootProject.name = "FNHookModule"
+rootProject.name = "FnShield"
 include(":app")

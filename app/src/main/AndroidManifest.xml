@@ -14,7 +14,7 @@
             </intent-filter>
         </activity>
         <meta-data android:name="xposedmodule" android:value="true" />
-        <meta-data android:name="xposeddescription" android:value="蜂鸟盾：超速/逆行/闯红灯/分心/未戴头盔/路口超速 屏蔽 + 播报静音 + GPS可信 + 无视距离" />
+        <meta-data android:name="xposeddescription" android:value="FnShield：超速/逆行/闯红灯/分心/未戴头盔/路口超速 屏蔽 + 播报静音 + GPS可信 + 无视距离" />
         <meta-data android:name="xposedminversion" android:value="82" />
         <meta-data android:name="xposedscope" android:value="me.ele.hbdteam" />
             </application>

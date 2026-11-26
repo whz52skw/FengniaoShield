@@ -1,4 +1,4 @@
-package com.fnhook2
+package com.fnshield
 
 import android.util.Base64
 import android.util.Log
@@ -8,7 +8,8 @@ import de.robv.android.xposed.XposedBridge
 /** 签名自检绕过：getPackageInfo 查 me.ele.hbdteam 签名时覆盖官方签（相当于 NPatck sigBypass） */
 object SignatureBypass {
     private val OFFICIAL_DER: String = "MIIDbTCCAlWgAwIBAgIEG9VGCDANBgkqhkiG9w0BAQsFADBmMQswCQYDVQQGEwI4NjERMA8GA1UECBMIc2hhbmdoYWkxETAPBgNVBAcTCHNoYW5naGFpMQ8wDQYDVQQKEwZlbGUubWUxDzANBgNVBAsTBmVsZS5tZTEPMA0GA1UEAxMGZWxlLm1lMCAXDTE1MDcxMDExMzA1M1oYDzIwNjUwNjI3MTEzMDUzWjBmMQswCQYDVQQGEwI4NjERMA8GA1UECBMIc2hhbmdoYWkxETAPBgNVBAcTCHNoYW5naGFpMQ8wDQYDVQQKEwZlbGUubWUxDzANBgNVBAsTBmVsZS5tZTEPMA0GA1UEAxMGZWxlLm1lMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtHSd3HItd4keJOZZULy5IsDr9u/GZNq+Hnit8R0wYFZ8fAVbwYdYhG0PIFCj71oXLLFUbW2IioXkFgZNMH95MtK357Kb/xO2pyvatV1kiNSHd9QkJS3RizhBIZbdVtrfVeStlIg8cAjyJHxr/vSJr6uhDGcj49mvbhYt+uKnyMRxF6IWJPkIomf3/AjlH82DgTvJE4P2fpfbweo4n92O1l9wQANr1O+QoiPBixOtC+gvt89CDR7mv9kTbkrIlDunH4bO3DV1LvrzK5VM6mDMlLEvc+PrKh12ufXT+uEeUJwCHZTzjBOh4N3SgHumr3Y/LdhmlFEy6WEiOa8nhW3d1QIDAQABoyEwHzAdBgNVHQ4EFgQUS/Vim/dCBQVklCGsWHyOiHCp4O0wDQYJKoZIhvcNAQELBQADggEBABdzM4cZxr/whNRkFKhRG/BuESNbppskJwC1wftKmKNk4MmSG5TiHt92lgbRQghKJZdO2Wep8NRNXwvy6w2hkGIPfA5VxlIVzSi9NGNz15VsTOG1Xgm5y+8PWixpfgL77eYSGMfVUXl6Ew6R+DPP72e8IuKgUaNQWazQTMPoZl25HTJjc+2K5lJPIoHMa5Cba/Yaty2a9vl6bLVj4OyXGNShNN6+S7g0k6SQvrR+ynrq7R5CoMKzNvmRWrwgCk8ljIFyhktxXVBFrKN2svk1IGTRl5dBJAVkkLmn/0X7RqSyIB+bBpb0epF/aoVe9urnZ2Q9uuto+MW7s0y4s2Ii/Fk="
-    private var officialSig: Any? = null
+    private val OFFICIAL_SHA1: String = "2D:82:6D:10:91:D7:EA:A9:C3:16:26:CC:EE:61:56:27:61:2C:BC:16"
+private var officialSig: Any? = null
 
     fun install(cl: ClassLoader) {
         try {
@@ -42,6 +43,22 @@ object SignatureBypass {
                     })
                 }
             }
+            // 高德业务层验签：SearchUtils.getSHA1 -> 官方 SHA1（修复重签后 AMap 变慢/丢名）
+            try {
+                val su = cl.loadClass("com.amap.api.services.core.SearchUtils")
+                for (m in su.declaredMethods) {
+                    if (m.name != "getSHA1") continue
+                    XposedBridge.hookMethod(m, object : XC_MethodHook() {
+                        override fun beforeHookedMethod(p: MethodHookParam?) {
+                            if (p == null) return
+                            HitLog.hit("高德验签")
+                            p.result = OFFICIAL_SHA1
+                        }
+                    })
+                    FnLogger.line("[Sig] 高德层 getSHA1 已挂载")
+                }
+            } catch (t: Throwable) { FnLogger.line("[Sig] 高德 getSHA1 失败: " + t.message) }
+
             FnLogger.line("[Sig] 签名绕过已挂")
         } catch (t: Throwable) { FnLogger.line("[Sig] 挂载失败: " + t.message) }
     }

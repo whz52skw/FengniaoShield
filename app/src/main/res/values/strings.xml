@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">蜂鸟盾</string>
+    <string name="app_name">FnShield</string>
     <string name="acc_desc">读取游戏界面文本，识别待抢单卡片并自动点击接受转单</string>
 </resources>

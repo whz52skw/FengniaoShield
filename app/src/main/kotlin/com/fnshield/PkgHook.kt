@@ -1,4 +1,4 @@
-package com.fnhook2
+package com.fnshield
 
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XposedBridge
@@ -61,7 +61,7 @@ object PkgHook {
                 try { val c = cl.loadClass(cn); bN++; bH += hookClass(c, "pkgB") } catch (_: Throwable) {}
             }
             FnLogger.line("[兜底层] A包 " + aN + " 类/" + aH + " 方法 | B包 " + bN + " 类/" + bH + " 方法")
-        }, "fn2-pkghook")
+        }, "fnshield-pkghook")
         t.isDaemon = true
         t.start()
     }

@@ -1,4 +1,4 @@
-package com.fnhook2
+package com.fnshield
 
 /** GPS 可信度族（对标 location.patch）- 只拦 is should 判定开关，不碰地图数据 getter */
 object GpsTrustHooks {

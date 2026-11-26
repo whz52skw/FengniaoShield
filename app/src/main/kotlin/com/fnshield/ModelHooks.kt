@@ -1,4 +1,4 @@
-package com.fnhook2
+package com.fnshield
 
 /** 违规判定模型层（对标 location.patch 的 QC/打卡/逆行/安全判定） */
 object ModelHooks {
